@@ -1,8 +1,8 @@
-# code modified from: https://gist.github.com/srishilesh/6c953ff1d7ee006b412be7674d1542cb
+# code from: https://gist.github.com/srishilesh/6c953ff1d7ee006b412be7674d1542cb
 
 import json
 
-coco_file = "/home/wallachmayas/bubbleID/src/valInfo.json"
+coco_file = "MMBCReco/src/valInfo.json"
 
 with open(coco_file) as json_file:
     coco_data = json.load(json_file)

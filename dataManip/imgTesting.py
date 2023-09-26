@@ -1,4 +1,4 @@
-imgPath = "/home/wallachmayas/bubbleID/dataManip/imgs/track2.png"
+imgPath = "MMBCReco/dataManip/imgs/track2.png"
 
 from PIL import Image, ImageFilter 
 from PIL.ImageFilter import (

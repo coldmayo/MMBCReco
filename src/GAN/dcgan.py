@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 from torchvision.utils import save_image
 
-d_depth = 16
-g_depth = 16
-lr = 0.001
+d_depth = 32
+g_depth = 32
+lr = 0.0002
 bs = 1
 epochs = 10
-img_size = 256
+img_size = 64
 img_channels = 1
 seed_channels = 256
 
@@ -24,19 +24,18 @@ class GNet(nn.Module):
     def __init__(self):
         super(GNet, self).__init__()
         self.model = nn.Sequential(
-
             nn.ConvTranspose2d(seed_channels, g_depth * 16, kernel_size=4, stride=1, padding=0),
             nn.BatchNorm2d(g_depth * 16),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(g_depth * 16, g_depth * 8, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(g_depth * 8),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(g_depth * 8, g_depth * 4, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(g_depth * 4),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(g_depth * 4, g_depth * 2, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(g_depth * 2),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             
             nn.ConvTranspose2d(g_depth * 2, img_channels, kernel_size=4, stride=2, padding=1),
             nn.Tanh(),  #Tanh activation
@@ -78,7 +77,7 @@ all_transforms = transforms.Compose([
 ])
 
 #Dataset
-root_dir = '/home/wallachmayas/bubbleID/src/GAN/trainGAN'
+root_dir = 'MMBCReco/src/GAN/trainGAN'
 dataset = datasets.ImageFolder(root = root_dir, transform = all_transforms)
 
 #Dataloader
@@ -134,4 +133,4 @@ for epoch in range(epochs):
             with torch.no_grad():
                 fake = G(sample_seed)
                 samples_fake = torchvision.utils.make_grid(fake, normalize=True)
-                save_image(fake.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
+                save_image(fake.data[:25], "MMBCReco/src/images/%d.png" % batches_done, nrow=5, normalize=True)

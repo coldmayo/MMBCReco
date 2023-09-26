@@ -3,8 +3,9 @@ import math
 import os
 
 count = 0
-videoFile = "/home/wallachmayas/bubbleID/dataManip/videos/bubbleChamber.mp4"
-framePath = "/home/wallachmayas/bubbleID/dataManip/frames"
+videoFile = "MMBCReco/dataManip/videos/bubbleChamber.mp4"
+#framePath = "MMBCReco/dataManip/frames"
+framePath = "MMBCReco/src/GAN/trainGAN"
 cap = cv2.VideoCapture(videoFile)
 frameRate = cap.get(5)
 
@@ -14,7 +15,7 @@ while((cap.isOpened())):
     if (ret != True):
         break
     if (frameId % math.floor(frameRate) == 0):
-        filename ="/home/wallachmayas/bubbleID/dataManip/frames/chamber1frame%d.jpg" % count
+        filename = framePath + "/chamber1frame%d.jpg" % count
         #for cropping
         #frame = frame[1080:2000, 0:2000]
         cv2.imwrite(filename, frame)
