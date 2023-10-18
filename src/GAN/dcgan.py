@@ -1,3 +1,5 @@
+# Generates 128x128 images
+
 import torch
 import torchvision
 import torch.nn as nn
@@ -8,65 +10,77 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 from torchvision.utils import save_image
+import os
 
+#Generator
+class GNet(nn.Module):
+    def __init__(self):
+        super(GNet, self).__init__()
+        nz = seed_channels
+        ngf = g_depth
+        nc = img_channels
+        self.model = nn.Sequential(
+            nn.ConvTranspose2d(nz, ngf * 16, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(ngf * 16),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(ngf * 16, ngf * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 8),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 4),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 2),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(ngf * 2,ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(ngf,nc, 4, 2, 1, bias=False),
+            nn.Tanh()
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+#Discriminator
+class DNet(nn.Module):
+    def __init__(self):
+        super(DNet, self).__init__()
+        ndf = d_depth
+        nc = img_channels
+        self.model = nn.Sequential(
+            nn.Conv2d(nc, ndf, 4, stride=2, padding=1, bias=False), 
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(ndf, ndf * 2, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(ndf * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(ndf * 2, ndf * 4, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(ndf * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(ndf * 4, ndf * 8, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(ndf * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(ndf * 8, ndf * 16, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(ndf * 16),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(ndf * 16, 1, 4, stride=1, padding=0, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+#Parameters
 d_depth = 32
 g_depth = 32
 lr = 0.0002
 bs = 1
 epochs = 10
-img_size = 64
+img_size = 128
 img_channels = 1
 seed_channels = 256
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-class GNet(nn.Module):
-    def __init__(self):
-        super(GNet, self).__init__()
-        self.model = nn.Sequential(
-            nn.ConvTranspose2d(seed_channels, g_depth * 16, kernel_size=4, stride=1, padding=0),
-            nn.BatchNorm2d(g_depth * 16),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(g_depth * 16, g_depth * 8, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(g_depth * 8),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(g_depth * 8, g_depth * 4, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(g_depth * 4),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(g_depth * 4, g_depth * 2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(g_depth * 2),
-            nn.LeakyReLU(),
-            
-            nn.ConvTranspose2d(g_depth * 2, img_channels, kernel_size=4, stride=2, padding=1),
-            nn.Tanh(),  #Tanh activation
-        )
-
-    def forward(self, x):
-        return self.model(x)
-
-class DNet(nn.Module):
-    def __init__(self):
-        super(DNet, self).__init__()
-        self.model = nn.Sequential(
-
-            nn.Conv2d(img_channels, d_depth, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(d_depth, d_depth * 2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(d_depth * 2),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(d_depth * 2, d_depth * 4, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(d_depth * 4),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(d_depth * 4, d_depth * 8, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(d_depth * 8),
-            nn.LeakyReLU(0.2),
-        
-            nn.Conv2d(d_depth * 8, 1, kernel_size=4, stride=2, padding=0),  #We avoid using a FC layer 
-            nn.Sigmoid(), #Sigmoid activation
-        )
-
-    def forward(self, x):
-        return self.model(x)
 
 #Transforms
 all_transforms = transforms.Compose([
@@ -76,6 +90,12 @@ all_transforms = transforms.Compose([
   transforms.Normalize((0.5),(0.5)),  #This should be changed to the mean and std of your dataset                                    
 ])
 
+#Delete images left by previous training
+disp_imgs = "MMBCReco/src/images"
+for img in os.listdir(disp_imgs):
+    os.remove(disp_imgs+"/"+img)
+
+
 #Dataset
 root_dir = 'MMBCReco/src/GAN/trainGAN'
 dataset = datasets.ImageFolder(root = root_dir, transform = all_transforms)
@@ -84,8 +104,8 @@ dataset = datasets.ImageFolder(root = root_dir, transform = all_transforms)
 loader = DataLoader(dataset, batch_size=bs, shuffle=True)
 
 #Initialize the networks
-G = GNet().to(device)  #Generator
-D = DNet().to(device) #Discriminator
+G = GNet().to(device)
+D = DNet().to(device)
 G.train()
 D.train()
 
@@ -94,7 +114,7 @@ criterion = nn.BCELoss()
 GOptim = optim.Adam(G.parameters(), lr=lr, betas=(0.7,0.999))
 DOptim = optim.Adam(D.parameters(), lr=lr, betas=(0.7,0.999))
 
-#Set a sample seed that will allow us to visualize results as training progresses
+#Sample Seed
 sample_seed = torch.randn(bs, seed_channels, 1, 1).to(device)
 
 #Training
@@ -134,3 +154,7 @@ for epoch in range(epochs):
                 fake = G(sample_seed)
                 samples_fake = torchvision.utils.make_grid(fake, normalize=True)
                 save_image(fake.data[:25], "MMBCReco/src/images/%d.png" % batches_done, nrow=5, normalize=True)
+
+#Save Models for Future use
+torch.save(GNet().state_dict(), 'MMBCReco/src/GAN/saved_model/generator.pth')
+torch.save(DNet().state_dict(), 'MMBCReco/src/GAN/saved_model/discriminator.pth')
