@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 from torchvision.utils import save_image
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Generator
 class GNet(nn.Module):
@@ -71,14 +73,14 @@ class DNet(nn.Module):
         return self.model(x)
 
 #Parameters
-d_depth = 32
-g_depth = 32
+d_depth = 64
+g_depth = 64
 lr = 0.0002
 bs = 1
-epochs = 10
+epochs = 4
 img_size = 128
 img_channels = 1
-seed_channels = 256
+seed_channels = 100
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -91,7 +93,11 @@ all_transforms = transforms.Compose([
 ])
 
 #Delete images left by previous training
-disp_imgs = "MMBCReco/src/images"
+disp_imgs = "MMBCReco/src/GAN/lossCurves"
+for img in os.listdir(disp_imgs):
+    os.remove(disp_imgs+"/"+img)
+
+disp_imgs = "MMBCReco/src/GAN/images"
 for img in os.listdir(disp_imgs):
     os.remove(disp_imgs+"/"+img)
 
@@ -117,6 +123,10 @@ DOptim = optim.Adam(D.parameters(), lr=lr, betas=(0.7,0.999))
 #Sample Seed
 sample_seed = torch.randn(bs, seed_channels, 1, 1).to(device)
 
+# loss
+lossCurveD = np.array([]) 
+lossCurveG = np.array([]) 
+
 #Training
 for epoch in range(epochs):
     loop = tqdm(enumerate(loader), total = len(loader), leave=False)
@@ -136,6 +146,7 @@ for epoch in range(epochs):
         D_loss_0 = criterion(results, targets)
         lossD = D_loss_1 + D_loss_0
         lossD.backward()
+        lossCurveD = np.append(lossCurveD, lossD.item())
         DOptim.step() 
 
         G.zero_grad()
@@ -143,18 +154,31 @@ for epoch in range(epochs):
         results = D(gen_images).reshape(-1)
         lossG = criterion(results, targets)
         lossG.backward()
+        lossCurveG = np.append(lossCurveG, lossG.item())
         GOptim.step()
 
         print("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"% (epoch, epochs, batch, len(loader), lossD, lossG))
 
         batches_done = epoch * len(loader) + batch
 
-        if batches_done % 100 == 0:  #Show samples at every 100th batch
+        if batches_done % 50 == 0:  #Show samples at every 100th batch
             with torch.no_grad():
                 fake = G(sample_seed)
                 samples_fake = torchvision.utils.make_grid(fake, normalize=True)
-                save_image(fake.data[:25], "MMBCReco/src/images/%d.png" % batches_done, nrow=5, normalize=True)
+                path = disp_imgs+"/"+str(batches_done)+".png"
+                save_image(fake.data[:25], path, nrow=5, normalize=True)
+                plt.xlabel('Months') 
+                plt.ylabel("No of Share's") 
+                plt.plot(lossCurveG)
+                plt.plot(lossCurveD)
+                path = "MMBCReco/src/GAN/lossCurves/"+str(batches_done)+".png"
+                plt.savefig(path)
 
-#Save Models for Future use
+# See loss curve
+plt.plot(lossCurveG)
+plt.plot(lossCurveD)
+plt.show()
+
+# Save Models for Future use
 torch.save(GNet().state_dict(), 'MMBCReco/src/GAN/saved_model/generator.pth')
 torch.save(DNet().state_dict(), 'MMBCReco/src/GAN/saved_model/discriminator.pth')
