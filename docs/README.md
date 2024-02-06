@@ -15,8 +15,10 @@
   <a href="#license">License</a>
 </p>
 
-## Purpose
-The purpose of the project is to develop a sophisticated classification and identification system for track data for the Modern Modular Bubble Chamber (MMBC). Bubble chambers are essential tools in high-energy physics research, capturing the paths of charged particles as they interact with the surrounding medium. However, the data produced by these experiments is voluminous, making it challenging to analyze by hand. This project aims to harness advanced machine learning and image recognition techniques to automatically recognize and classify particle tracks, thus simplifying the process of particle identification and enabling physicists to extract meaningful insights about fundamental particle interactions.
+## Abstract
+The Modern Modular Bubble Chamber (MMBC) is a future particle
+detector which will mainly be used for displaying muon tracks. However,the amount of data produced by these experiments could be very large which could cause analysis to take a very long time. This project aims to develop a sophisticated classification and identification system for track data within the MMBC. This paper will discuss how the Faster R-CNN
+was used to automate the recognition and classification of particle tracks.
 
 ## Features
 - Faster R-CNN from Detectron2 for Identifying Tracks
