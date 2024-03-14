@@ -16,9 +16,7 @@
 </p>
 
 ## Abstract
-The Modern Modular Bubble Chamber (MMBC) is a future particle
-detector which will mainly be used for displaying muon tracks. However,the amount of data produced by these experiments could be very large which could cause analysis to take a very long time. This project aims to develop a sophisticated classification and identification system for track data within the MMBC. This paper will discuss how the Faster R-CNN
-was used to automate the recognition and classification of particle tracks.
+The Modern Adaptive Modular Bubble chamber Archetype (MAMBA) is a design prototype for a future particle detector that will measure neutrino-nucleus interactions on light nuclear targets. Modern Bubble Chambers use image learning for the identification of nuclear recoils, but none of them have used machine learning on the Hertz timescale which is widely used by older bubble chambers. Proof-of-concept image learning and track identification on triggering timescales can be done with the Faster R-CNN, a machine learning architecture suited for object detection. The model is trained using generated images. In the future, a Deep Convolutional Generative Adversarial Network (DCGAN) will be used and it would be be trained on a video from a consumer grade cloud chamber. Progress will be presented and discussed.
 
 ## Features
 - Faster R-CNN from Detectron2 for Identifying Tracks
