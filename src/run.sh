@@ -4,6 +4,6 @@
 
 file=${1--}
 set -e
-source "../../.myenv/bin/activate" # insert path to your virtual envirnment
+source "../.venv/bin/activate" # insert path to your virtual envirnment
 python -u $file
 

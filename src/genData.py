@@ -6,14 +6,14 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-numImgs = 50
+numImgs = 3000
 
-maskPath = "MMBCReco/src/masks/track.png"
-groundPath = "MMBCReco/src/ground"
-#dataPath = "MMBCReco/src/trainData/"   # training
-dataPath = "MMBCReco/src/valData/"   # validation
-#jsonPath = "./dataInfo.json"   # training
-jsonPath = "./valInfo.json"   # validation
+maskPath = "masks/track.png"
+groundPath = "ground"
+dataPath = "trainData/"   # training
+#dataPath = "MMBCReco/src/valData/"   # validation
+jsonPath = "./dataInfo.json"   # training
+#jsonPath = "./valInfo.json"   # validation
 
 def datasetInfo(imageData,annotData):
     return {"categories": [{"id": 1,"name": "track"}],"images": imageData,"annotations": annotData}
@@ -42,8 +42,8 @@ for i in tqdm(range(numImgs)):
     numTrack = np.random.randint(1,7)
     newsize = (300,300)
     grounds = os.listdir(groundPath)
-    #ind = np.random.randint(1,len(grounds)-1)
-    ind = 0
+    ind = np.random.randint(1,len(grounds)-1)
+    #ind = 0
     gPath = os.path.join(groundPath,grounds[ind])
     # img1: background image; img2: track image
     img1 = Image.open(gPath)
